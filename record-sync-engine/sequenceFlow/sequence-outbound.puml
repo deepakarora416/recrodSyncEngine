@@ -1,0 +1,50 @@
+@startuml OutboundSyncSequence
+
+header Record Sync System
+title Core Component Sequence - Outbound Sync
+
+autonumber
+skinparam shadowing true
+skinparam backgroundColor White
+skinparam maxMessageSize 200
+
+participant "Internal System\n(System A)" as SystemA #LightBlue
+
+box "Sync Engine" #LightGreen
+    participant "Validator" as Validator
+    participant "Transformer" as Transformer
+    participant "Rate Limiter" as RateLimiter
+    participant "CRM Provider" as Provider
+end box
+
+participant "External CRM\n(System B)" as SystemB #LightCoral
+
+group #White Outbound Sync (Internal → External)
+    
+    SystemA -> Validator: Send record for sync
+    
+    Validator -> Validator: Check required fields\nand data format
+    
+    Validator -> Transformer: Pass validated record
+    
+    Transformer -> Transformer: Convert field names\n(camelCase → PascalCase)
+    
+    Transformer -> RateLimiter: Pass transformed record
+    
+    RateLimiter -> RateLimiter: Check available tokens
+    
+    alt #Azure Rate limit OK
+        RateLimiter -> Provider: Forward request
+        Provider -> SystemB: CREATE/UPDATE record
+        SystemB --> Provider: Acknowledge
+        Provider --> RateLimiter: Success
+        RateLimiter --> Transformer: Success
+        Transformer --> Validator: Success
+        Validator --> SystemA: Return sync result
+    else #Pink Rate limit exceeded
+        RateLimiter --> SystemA: Return rate limit error
+    end
+    
+end group
+
+@enduml

@@ -1,0 +1,43 @@
+@startuml SimpleSequence
+
+header Record Sync System
+title Core Component Sequence (High-Level Flow)
+
+autonumber
+skinparam shadowing true
+skinparam backgroundColor White
+skinparam maxMessageSize 200
+
+participant "Internal System\n(System A)" as SystemA #LightBlue
+
+box "Sync Engine" #LightGreen
+    participant "Sync Engine" as Engine
+end box
+
+participant "External CRM\n(System B)" as SystemB #LightCoral
+
+group #White Outbound Sync
+    
+    SystemA -> Engine: Send record for sync
+    
+    Engine -> Engine: Validate & Transform
+    
+    Engine -> SystemB: Push record to CRM
+    
+    SystemB --> Engine: Acknowledge
+    
+    Engine --> SystemA: Return sync result
+    
+end group
+
+group #Azure Inbound Sync
+    
+    SystemB -> Engine: Send CRM record
+    
+    Engine -> Engine: Validate & Transform
+    
+    Engine --> SystemA: Return internal record
+    
+end group
+
+@enduml

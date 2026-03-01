@@ -1,0 +1,36 @@
+@startuml InboundSyncSequence
+
+header Record Sync System
+title Core Component Sequence - Inbound Sync
+
+autonumber
+skinparam shadowing true
+skinparam backgroundColor White
+skinparam maxMessageSize 200
+
+participant "Internal System\n(System A)" as SystemA #LightBlue
+
+box "Sync Engine" #LightGreen
+    participant "Validator" as Validator
+    participant "Transformer" as Transformer
+end box
+
+participant "External CRM\n(System B)" as SystemB #LightCoral
+
+group #White Inbound Sync (External → Internal)
+    
+    SystemB -> Validator: Send CRM record
+    
+    Validator -> Validator: Check required fields\nand data format
+    
+    Validator -> Transformer: Pass validated record
+    
+    Transformer -> Transformer: Convert field names\n(PascalCase → camelCase)
+    
+    Transformer --> Validator: Return internal record
+    
+    Validator --> SystemA: Return transformed record
+    
+end group
+
+@enduml
